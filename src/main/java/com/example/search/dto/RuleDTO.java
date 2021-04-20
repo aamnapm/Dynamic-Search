@@ -14,4 +14,7 @@ public class RuleDTO {
     private String field;
     private String operator;
     private List<String> values;//Used in case of IN operator
+
+    private String condition;
+    private List<RuleDTO> rules;
 }

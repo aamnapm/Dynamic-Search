@@ -11,6 +11,5 @@ import java.util.List;
 @Builder
 public class SectionDTO {
     private String condition;
-    private SectionDTO section;
     private List<RuleDTO> rules;
 }

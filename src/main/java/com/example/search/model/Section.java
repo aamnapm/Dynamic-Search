@@ -11,7 +11,6 @@ import java.util.List;
 @Setter
 @Builder
 public class Section {
-    private Section section;
     private List<Rule> rules;
     private ECondition condition;
 }

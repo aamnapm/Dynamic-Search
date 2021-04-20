@@ -1,5 +1,6 @@
 package com.example.search.model;
 
+import com.example.search.enums.ECondition;
 import com.example.search.enums.EOperator;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,4 +16,7 @@ public class Rule {
     private String field;
     private EOperator operator;
     private List<String> values;//Used in case of IN operator
+
+    private List<Rule> rules;
+    private ECondition condition;
 }
