@@ -1,67 +1,70 @@
 package com.example.search.service;
 
+import com.example.search.dto.SectionDTO;
 import com.example.search.enums.ECondition;
-import com.example.search.model.Product;
+import com.example.search.mapper.SectionMapper;
 import com.example.search.model.Rule;
 import com.example.search.model.Section;
-import com.example.search.repository.ProductRepository;
-import lombok.AllArgsConstructor;
+import com.example.search.repository.SearchRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.stereotype.Service;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.springframework.data.jpa.domain.Specification.where;
 
-@AllArgsConstructor
-@Service
-public class SearchService implements ISearchService {
+public abstract class SearchService<T, ID extends Serializable> implements ISearchService<T> {
 
-    private final ProductRepository productRepository;
+    @Autowired
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
+    public SearchRepository<T, ID> repository;
+
+    @Autowired
+    protected SectionMapper sectionMapper;
 
     @Override
-    public List<Product> search(Section section) {
-
-        List<Product> queryResult = getData(section);
+    public List<T> search(SectionDTO section) {
+        List<T> queryResult = getData(map(section));
 
         //todo:for develop
         System.out.println("result=>" + queryResult.size());
         queryResult.forEach(product -> {
-            System.out.println("result=>" + product.getName());
+            System.out.println("result=>" + product);
         });
 
         return queryResult;
     }
 
-    private List<Product> getData(Section section) {
+    protected List<T> getData(Section section) {
         if (section == null) {
-            return productRepository.findAll();
+            return repository.findAll();
         } else {
-            Specification<Product> specification = getSpecification(section);
+            Specification<T> specification = getSpecification(section);
             if (specification != null) {
-                return productRepository.findAll(specification);
+                return repository.findAll(specification);
             } else {
-                return productRepository.findAll();
+                return repository.findAll();
             }
         }
     }
 
-    private Specification<Product> getSpecification(Section section) {
+    protected Specification<T> getSpecification(Section section) {
         return getSpecification(section.getRules(), section.getCondition());
     }
 
-    public Specification<Product> getSpecification(List<Rule> rules, ECondition ECondition) {
+    protected Specification<T> getSpecification(List<Rule> rules, ECondition ECondition) {
         if (rules.size() > 0) {
             return checkCondition(rules, ECondition);
         } else {
-            return null;
+            return null;//throws exception
         }
     }
 
-    private Specification<Product> checkCondition(List<Rule> rules, ECondition condition) {
+    private Specification<T> checkCondition(List<Rule> rules, ECondition condition) {
         Rule firstRule = rules.remove(0);
-        Specification<Product> specification = null;
+        Specification<T> specification = null;
 
         if (firstRule.getCondition() == null) {
             specification = where(createSpecification(firstRule));
@@ -87,8 +90,7 @@ public class SearchService implements ISearchService {
         return specification;
     }
 
-
-    private Specification<Product> createSpecification(Rule input) {
+    private Specification<T> createSpecification(Rule input) {
         switch (input.getOperator()) {
             case EQUALS:
                 return (root, query, criteriaBuilder) ->
@@ -135,5 +137,9 @@ public class SearchService implements ISearchService {
             lists.add(castToRequiredType(fieldType, s));
         }
         return lists;
+    }
+
+    private Section map(SectionDTO sectionDTO) {
+        return sectionMapper.toSection(sectionDTO);
     }
 }
