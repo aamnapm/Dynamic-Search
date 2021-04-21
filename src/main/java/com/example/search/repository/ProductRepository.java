@@ -1,9 +1,8 @@
 package com.example.search.repository;
 
 import com.example.search.model.Product;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.stereotype.Repository;
 
-public interface ProductRepository extends JpaRepository<Product, String>, JpaSpecificationExecutor<Product> {
-
+@Repository
+public interface ProductRepository extends SearchRepository<Product, String> {
 }
