@@ -5,5 +5,5 @@ import org.springframework.stereotype.Service;
 
 
 @Service
-public class AddressService extends SearchService<Address, String> {
+public class AddressService extends SearchService<Address, Long> {
 }
