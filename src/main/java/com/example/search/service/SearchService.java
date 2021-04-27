@@ -29,7 +29,7 @@ public abstract class SearchService<T, ID extends Serializable> implements ISear
 
     @Override
     public List<T> search(SectionDTO section) {
-        List<T> queryResult = getData(map(section));
+        List<T> queryResult = getData(map(section), "");
 
         //todo:for develop
         System.out.println("result=>" + queryResult.size());
@@ -45,7 +45,15 @@ public abstract class SearchService<T, ID extends Serializable> implements ISear
         String key = getKey(t);
         System.out.println(key);
 
-        return "";
+        List<T> queryResult = getData(map(section), key);
+
+        System.out.println("result=>" + queryResult.size());
+        queryResult.forEach(product -> {
+            System.out.println("result=>" + product);
+        });
+
+        return queryResult;
+//        return "";
     }
 
     private String getKey(Object t) {
@@ -87,11 +95,11 @@ public abstract class SearchService<T, ID extends Serializable> implements ISear
         }
     }
 
-    protected List<T> getData(Section section) {
+    protected List<T> getData(Section section, String key) {
         if (section == null) {
             return repository.findAll();
         } else {
-            Specification<T> specification = getSpecification(section);
+            Specification<T> specification = getSpecification(section, key);
             if (specification != null) {
                 return repository.findAll(specification);
             } else {
@@ -100,47 +108,61 @@ public abstract class SearchService<T, ID extends Serializable> implements ISear
         }
     }
 
-    protected Specification<T> getSpecification(Section section) {
-        return getSpecification(section.getRules(), section.getCondition());
+    protected Specification<T> getSpecification(Section section, String key) {
+        return getSpecification(section.getRules(), section.getCondition(), key);
     }
 
-    protected Specification<T> getSpecification(List<Rule> rules, ECondition ECondition) {
+    protected Specification<T> getSpecification(List<Rule> rules, ECondition ECondition, String key) {
         if (rules.size() > 0) {
-            return checkCondition(rules, ECondition);
+            return checkCondition(rules, ECondition, key);
         } else {
             return null;//throws exception
         }
     }
 
-    private Specification<T> checkCondition(List<Rule> rules, ECondition condition) {
+    private Specification<T> checkCondition(List<Rule> rules, ECondition condition, String key) {
         Rule firstRule = rules.remove(0);
         Specification<T> specification = null;
 
         if (firstRule.getCondition() == null) {
-            specification = where(createSpecification(firstRule));
+            specification = where(createSpecification(firstRule, key));
         } else {
-            specification = getSpecification(firstRule.getRules(), firstRule.getCondition());//todo
+            specification = getSpecification(firstRule.getRules(), firstRule.getCondition(), key);//todo
         }
 
         for (Rule input : rules) {
             if (condition == ECondition.AND) {
                 if (input.getCondition() == null) {
-                    specification = specification.and(createSpecification(input));
+                    specification = specification.and(createSpecification(input, key));
                 } else {
-                    specification = getSpecification(input.getRules(), input.getCondition());//todo
+                    specification = getSpecification(input.getRules(), input.getCondition(), key);//todo
                 }
             } else {
                 if (input.getCondition() == null) {
-                    specification = specification.or(createSpecification(input));
+                    specification = specification.or(createSpecification(input, key));
                 } else {
-                    specification = getSpecification(input.getRules(), input.getCondition());//todo
+                    specification = getSpecification(input.getRules(), input.getCondition(), key);//todo
                 }
             }
         }
         return specification;
     }
 
-    private Specification<T> createSpecification(Rule input) {
+    private Specification<T> createSpecification(Rule input, String key) {
+        String[] split = input.getField().split("\\.");
+        if (split.length >= 2) {
+            String s = split[0];
+            if (key.equals(s)) {
+                System.out.println("=> " + s);
+                System.out.println("=>> " + input.getField());
+            }
+            return checkOperatorAndCreateSpecification(input, key);
+        } else {
+            return checkOperatorAndCreateSpecification(input);
+        }
+    }
+
+    protected Specification<T> checkOperatorAndCreateSpecification(Rule input) {
         switch (input.getOperator()) {
             case EQUALS:
                 return (root, query, criteriaBuilder) ->
@@ -161,6 +183,38 @@ public abstract class SearchService<T, ID extends Serializable> implements ISear
             case LIKE:
                 return (root, query, criteriaBuilder) ->
                         criteriaBuilder.like(root.get(input.getField()), "%" + input.getValue() + "%");
+            case IN:
+                return (root, query, criteriaBuilder) ->
+                        criteriaBuilder.in(root.get(input.getField()))
+                                .value(castToRequiredType(root.get(input.getField()).getJavaType(), input.getValues()));
+            default:
+                throw new RuntimeException("Operation not supported yet");
+        }
+    }
+
+    protected Specification<T> checkOperatorAndCreateSpecification(Rule input, String key) {
+        switch (input.getOperator()) {
+            case EQUALS:
+                return (root, query, criteriaBuilder) ->
+                        criteriaBuilder.equal(root.get(input.getField()),
+                                castToRequiredType(root.get(input.getField()).getJavaType(), input.getValue()));
+            case NOT_EQ:
+                return (root, query, criteriaBuilder) ->
+                        criteriaBuilder.notEqual(root.get(input.getField()),
+                                castToRequiredType(root.get(input.getField()).getJavaType(), input.getValue()));
+            case GREATER_THAN:
+                return (root, query, criteriaBuilder) ->
+                        criteriaBuilder.gt(root.get(input.getField()),
+                                (Number) castToRequiredType(root.get(input.getField()).getJavaType(), input.getValue()));
+            case LESS_THAN:
+                return (root, query, criteriaBuilder) ->
+                        criteriaBuilder.lt(root.get(input.getField()),
+                                (Number) castToRequiredType(root.get(input.getField()).getJavaType(), input.getValue()));
+            case LIKE:
+                return (root, query, criteriaBuilder) -> {
+                    String[] split = input.getField().split("\\.");
+                    return criteriaBuilder.like(root.join(key).get(split[split.length - 1]), "%" + input.getValue() + "%");
+                };
             case IN:
                 return (root, query, criteriaBuilder) ->
                         criteriaBuilder.in(root.get(input.getField()))
