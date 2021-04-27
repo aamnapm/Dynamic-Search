@@ -2,6 +2,7 @@ package com.example.search.controller;
 
 import com.example.search.dto.SectionDTO;
 import com.example.search.service.ISearchService;
+import com.example.search.utils.Entity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,5 +20,10 @@ public abstract class SearchController<T> {
     @PostMapping(value = "/search")
     public ResponseEntity<List<T>> search(@RequestBody SectionDTO sectionDTO) {
         return new ResponseEntity<>(iNICICOSearchService.search(sectionDTO), HttpStatus.OK);
+    }
+
+    @PostMapping(value = "/test")
+    public ResponseEntity<String> test(@RequestBody SectionDTO sectionDTO) {
+        return new ResponseEntity<String>(iNICICOSearchService.test(sectionDTO, new Entity().find(iNICICOSearchService)), HttpStatus.OK);
     }
 }
