@@ -6,4 +6,6 @@ import java.util.List;
 
 public interface ISearchService<T> {
     List<T> search(SectionDTO section);
+
+    String test(SectionDTO section, Object t);
 }
