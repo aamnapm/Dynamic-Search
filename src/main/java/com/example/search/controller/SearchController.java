@@ -23,7 +23,7 @@ public abstract class SearchController<T> {
     }
 
     @PostMapping(value = "/test")
-    public ResponseEntity<String> test(@RequestBody SectionDTO sectionDTO) {
-        return new ResponseEntity<String>(iNICICOSearchService.test(sectionDTO, new Entity().find(iNICICOSearchService)), HttpStatus.OK);
+    public ResponseEntity<List<T>> test(@RequestBody SectionDTO sectionDTO) {
+        return new ResponseEntity<>(iNICICOSearchService.test(sectionDTO, new Entity().find(iNICICOSearchService)), HttpStatus.OK);
     }
 }
