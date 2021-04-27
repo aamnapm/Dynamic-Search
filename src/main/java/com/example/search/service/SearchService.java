@@ -41,7 +41,7 @@ public abstract class SearchService<T, ID extends Serializable> implements ISear
     }
 
     @Override
-    public String test(SectionDTO section, Object t) {
+    public List<T> test(SectionDTO section, Object t) {
         String key = getKey(t);
         System.out.println(key);
 
