@@ -9,7 +9,10 @@ import com.example.search.repository.SearchRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 
+import javax.persistence.JoinColumn;
 import java.io.Serializable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,6 +38,53 @@ public abstract class SearchService<T, ID extends Serializable> implements ISear
         });
 
         return queryResult;
+    }
+
+    @Override
+    public String test(SectionDTO section, Object t) {
+        String key = getKey(t);
+        System.out.println(key);
+
+        return "";
+    }
+
+    private String getKey(Object t) {
+
+        String key = null;
+        Field[] declaredFields = t.getClass().getDeclaredFields();
+
+        for (Field method : declaredFields) {
+            Annotation[] declaredAnnotations = method.getDeclaredAnnotations();
+            for (Annotation annotation : declaredAnnotations) {
+               /* if (annotation instanceof OneToMany) {
+                    System.out.println(method.getName() + " OneToMany " + annotation);
+                }
+                if (annotation instanceof ManyToMany) {
+                    System.out.println(method.getName() + " ManyToMany " + annotation);
+                }
+                if (annotation instanceof ManyToOne) {
+                    System.out.println(method.getName() + " ManyToOne " + annotation);
+                }*/
+                if (annotation instanceof JoinColumn) {
+//                    System.out.println(method.getName() + " JoinColumn ");
+
+                    String[] split = method.getType().toString().split("\\.");
+
+                    key = split[split.length - 1].toLowerCase();
+
+//                    System.out.println("key " + key);
+
+//                    System.out.println(((JoinColumn) annotation).name());
+                }
+            }
+        }
+
+        if (key != null) {
+            return key;
+        } else {
+            //throw
+            return null;
+        }
     }
 
     protected List<T> getData(Section section) {
@@ -91,6 +141,36 @@ public abstract class SearchService<T, ID extends Serializable> implements ISear
     }
 
     private Specification<T> createSpecification(Rule input) {
+        switch (input.getOperator()) {
+            case EQUALS:
+                return (root, query, criteriaBuilder) ->
+                        criteriaBuilder.equal(root.get(input.getField()),
+                                castToRequiredType(root.get(input.getField()).getJavaType(), input.getValue()));
+            case NOT_EQ:
+                return (root, query, criteriaBuilder) ->
+                        criteriaBuilder.notEqual(root.get(input.getField()),
+                                castToRequiredType(root.get(input.getField()).getJavaType(), input.getValue()));
+            case GREATER_THAN:
+                return (root, query, criteriaBuilder) ->
+                        criteriaBuilder.gt(root.get(input.getField()),
+                                (Number) castToRequiredType(root.get(input.getField()).getJavaType(), input.getValue()));
+            case LESS_THAN:
+                return (root, query, criteriaBuilder) ->
+                        criteriaBuilder.lt(root.get(input.getField()),
+                                (Number) castToRequiredType(root.get(input.getField()).getJavaType(), input.getValue()));
+            case LIKE:
+                return (root, query, criteriaBuilder) ->
+                        criteriaBuilder.like(root.get(input.getField()), "%" + input.getValue() + "%");
+            case IN:
+                return (root, query, criteriaBuilder) ->
+                        criteriaBuilder.in(root.get(input.getField()))
+                                .value(castToRequiredType(root.get(input.getField()).getJavaType(), input.getValues()));
+            default:
+                throw new RuntimeException("Operation not supported yet");
+        }
+    }
+
+    private Specification<T> join(Rule input) {
         switch (input.getOperator()) {
             case EQUALS:
                 return (root, query, criteriaBuilder) ->
