@@ -1,5 +1,7 @@
 package com.example.search.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jdk.nashorn.internal.ir.annotations.Ignore;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -25,6 +27,7 @@ public class Address {
     @Column(name = "unit")
     private String unit;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "person_id", nullable = false,insertable = false,updatable = false)
     private Person person;
