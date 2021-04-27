@@ -1,29 +1,35 @@
 package com.example.search.model;
 
-import com.example.search.enums.ESTATE;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 @Entity
 @Getter
 @Setter
+@Table(name = "address")
 public class Address {
+
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Long id;
 
-    private String line1;
-
-    private String line2;
-
+    @Column(name = "city")
     private String city;
 
-    @Enumerated(EnumType.STRING)
-    private ESTATE ESTATE;
+    @Column(name = "street")
+    private String street;
 
-    private String pincode;
+    @Column(name = "unit")
+    private String unit;
+
+    @ManyToOne
+    @JoinColumn(name = "person_id", nullable = false,insertable = false,updatable = false)
+    private Person person;
+
+    @Setter
+    @Column(name = "person_id", nullable = false)
+    private Long personId;
 }
