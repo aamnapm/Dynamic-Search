@@ -1,11 +1,11 @@
 package com.example.search.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jdk.nashorn.internal.ir.annotations.Ignore;
 import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
 @Getter
@@ -29,10 +29,15 @@ public class Address {
 
     @JsonIgnore
     @ManyToOne
-    @JoinColumn(name = "person_id", nullable = false,insertable = false,updatable = false)
+    @JoinColumn(name = "person_id", nullable = false, insertable = false, updatable = false)
     private Person person;
 
     @Setter
     @Column(name = "person_id", nullable = false)
     private Long personId;
+
+    @OneToMany(mappedBy = "address")
+    private List<AddressTel> addressTelList;
+
+
 }
