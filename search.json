@@ -1,0 +1,25 @@
+{
+  "condition": "AND",
+  "rules": [
+    {
+      "value": "اکبری",
+      "field": "lastName",
+      "operator": "LIKE"
+    },
+    {
+      "condition": "AND",
+      "rules": [
+        {
+          "value": "رضا",
+          "field": "firstName",
+          "operator": "LIKE"
+        },
+        {
+          "value": "مدی",
+          "field": "job.name",
+          "operator": "LIKE"
+        }
+      ]
+    }
+  ]
+}
