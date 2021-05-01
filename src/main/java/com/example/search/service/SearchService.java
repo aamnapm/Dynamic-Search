@@ -2,6 +2,7 @@ package com.example.search.service;
 
 import com.example.search.dto.SectionDTO;
 import com.example.search.enums.ECondition;
+import com.example.search.exeption.BadRequestException;
 import com.example.search.mapper.SectionMapper;
 import com.example.search.model.Rule;
 import com.example.search.model.Section;
@@ -98,7 +99,7 @@ public abstract class SearchService<T, ID extends Serializable> implements ISear
     }
 
     protected Specification<T> getSpecification(List<Rule> rules, ECondition ECondition, String key, Specification<T> specification1) {
-//        specification1 = where(specification1);
+        specification1 = where(null);
         if (rules.size() > 0) {
             return checkCondition(rules, ECondition, key, specification1);
         } else {
@@ -106,8 +107,8 @@ public abstract class SearchService<T, ID extends Serializable> implements ISear
         }
     }
 
-    private Specification<T> checkCondition(List<Rule> rules, ECondition condition, String key, Specification<T> spc) {
-        Specification<T> specification = where(null);
+    private Specification<T> checkCondition(List<Rule> rules, ECondition condition, String key, Specification<T> specification) {
+
         if (condition == ECondition.AND) {
             specification = Specification.where(specification.and(checkRules(rules, condition, key, specification)));
         } else {
@@ -123,14 +124,14 @@ public abstract class SearchService<T, ID extends Serializable> implements ISear
                 if (input.getCondition() == null) {
                     specification = specification.and(createSpecification(input, key));
                 } else {
-                    specification = specification.and(getSpecification(input.getRules(), condition, key, specification));
+                    specification = specification.and(getSpecification(input.getRules(), input.getCondition(), key, specification));
                 }
             } else {
                 System.out.println(condition);
                 if (input.getCondition() == null) {
                     specification = specification.or(createSpecification(input, key));
                 } else {
-                    specification = specification.or(getSpecification(input.getRules(), condition, key, specification));
+                    specification = specification.or(getSpecification(input.getRules(), input.getCondition(), key, specification));
                 }
             }
         }
