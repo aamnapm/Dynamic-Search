@@ -40,6 +40,20 @@ public abstract class SearchService<T, ID extends Serializable> implements ISear
         return queryResult;
     }
 
+    protected List<T> getData(Section section, String key) {
+        if (section == null) {
+            return repository.findAll();
+        } else {
+            Specification<T> specification1 = where(null);
+            Specification<T> specification = getSpecification(section, key, specification1);
+            if (specification != null) {
+                return repository.findAll(specification);
+            } else {
+                return repository.findAll();
+            }
+        }
+    }
+
     @Override
     public List<T> test(SectionDTO section, Object t) {
         String key = getKey(t);
@@ -64,25 +78,9 @@ public abstract class SearchService<T, ID extends Serializable> implements ISear
         for (Field method : declaredFields) {
             Annotation[] declaredAnnotations = method.getDeclaredAnnotations();
             for (Annotation annotation : declaredAnnotations) {
-               /* if (annotation instanceof OneToMany) {
-                    System.out.println(method.getName() + " OneToMany " + annotation);
-                }
-                if (annotation instanceof ManyToMany) {
-                    System.out.println(method.getName() + " ManyToMany " + annotation);
-                }
-                if (annotation instanceof ManyToOne) {
-                    System.out.println(method.getName() + " ManyToOne " + annotation);
-                }*/
                 if (annotation instanceof JoinColumn) {
-//                    System.out.println(method.getName() + " JoinColumn ");
-
                     String[] split = method.getType().toString().split("\\.");
-
                     key = split[split.length - 1].toLowerCase();
-
-//                    System.out.println("key " + key);
-
-//                    System.out.println(((JoinColumn) annotation).name());
                 }
             }
         }
@@ -90,58 +88,49 @@ public abstract class SearchService<T, ID extends Serializable> implements ISear
         if (key != null) {
             return key;
         } else {
-            //throw
-            return null;
+            throw new BadRequestException("Key can not be null!");
         }
     }
 
-    protected List<T> getData(Section section, String key) {
-        if (section == null) {
-            return repository.findAll();
-        } else {
-            Specification<T> specification = getSpecification(section, key);
-            if (specification != null) {
-                return repository.findAll(specification);
-            } else {
-                return repository.findAll();
-            }
-        }
+
+    protected Specification<T> getSpecification(Section section, String key, Specification<T> specification1) {
+        return getSpecification(section.getRules(), section.getCondition(), key, specification1);
     }
 
-    protected Specification<T> getSpecification(Section section, String key) {
-        return getSpecification(section.getRules(), section.getCondition(), key);
-    }
-
-    protected Specification<T> getSpecification(List<Rule> rules, ECondition ECondition, String key) {
+    protected Specification<T> getSpecification(List<Rule> rules, ECondition ECondition, String key, Specification<T> specification1) {
+//        specification1 = where(specification1);
         if (rules.size() > 0) {
-            return checkCondition(rules, ECondition, key);
+            return checkCondition(rules, ECondition, key, specification1);
         } else {
-            return null;//throws exception
+            throw new BadRequestException("List can not be null!");
         }
     }
 
-    private Specification<T> checkCondition(List<Rule> rules, ECondition condition, String key) {
-        Rule firstRule = rules.remove(0);
-        Specification<T> specification = null;
-
-        if (firstRule.getCondition() == null) {
-            specification = where(createSpecification(firstRule, key));
+    private Specification<T> checkCondition(List<Rule> rules, ECondition condition, String key, Specification<T> spc) {
+        Specification<T> specification = where(null);
+        if (condition == ECondition.AND) {
+            specification = Specification.where(specification.and(checkRules(rules, condition, key, specification)));
         } else {
-            specification = getSpecification(firstRule.getRules(), firstRule.getCondition(), key);//todo
+            specification = Specification.where(specification.or(checkRules(rules, condition, key, specification)));
         }
+        return specification;
+    }
 
+    private Specification<T> checkRules(List<Rule> rules, ECondition condition, String key, Specification<T> specification) {
         for (Rule input : rules) {
             if (condition == ECondition.AND) {
+                System.out.println(condition);
                 if (input.getCondition() == null) {
                     specification = specification.and(createSpecification(input, key));
                 } else {
-                    specification = getSpecification(input.getRules(), input.getCondition(), key);//todo
+                    specification = specification.and(getSpecification(input.getRules(), condition, key, specification));
                 }
             } else {
+                System.out.println(condition);
                 if (input.getCondition() == null) {
                     specification = specification.or(createSpecification(input, key));
                 } else {
-                    specification = getSpecification(input.getRules(), input.getCondition(), key);//todo
+                    specification = specification.or(getSpecification(input.getRules(), condition, key, specification));
                 }
             }
         }
@@ -149,14 +138,15 @@ public abstract class SearchService<T, ID extends Serializable> implements ISear
     }
 
     private Specification<T> createSpecification(Rule input, String key) {
+        System.out.println(input.getValue());
         String[] split = input.getField().split("\\.");
         if (split.length >= 2) {
             String s = split[0];
             if (key.equals(s)) {
-                System.out.println("=> " + s);
-                System.out.println("=>> " + input.getField());
+                return checkOperatorAndCreateSpecification(input, key);
+            } else {
+                throw new BadRequestException("Foreign Key inCorrect!");
             }
-            return checkOperatorAndCreateSpecification(input, key);
         } else {
             return checkOperatorAndCreateSpecification(input);
         }
@@ -262,7 +252,7 @@ public abstract class SearchService<T, ID extends Serializable> implements ISear
         } else if (Enum.class.isAssignableFrom(fieldType)) {
             return Enum.valueOf(fieldType, value);
         }
-        return null;
+        throw new BadRequestException("cast field");
     }
 
     private Object castToRequiredType(Class fieldType, List<String> value) {

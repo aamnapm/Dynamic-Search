@@ -15,6 +15,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PersonDTO {
 
+    private Long jobId;
     private Integer age;
     private String firstName;
     private String lastName;
@@ -27,6 +28,7 @@ public class PersonDTO {
     @ApiModel("PersonInfo")
     public static class Info extends PersonDTO {
         private Long id;
+        private JobDTO job;
         private List<AddressDTO> addressList;
     }
 
