@@ -184,32 +184,25 @@ public abstract class SearchService<T, ID extends Serializable> implements ISear
     }
 
     protected Specification<T> checkOperatorAndCreateSpecification(Rule input, String key) {
+        String[] split = input.getField().split("\\.");
         switch (input.getOperator()) {
             case EQUALS:
                 return (root, query, criteriaBuilder) ->
-                        criteriaBuilder.equal(root.get(input.getField()),
-                                castToRequiredType(root.get(input.getField()).getJavaType(), input.getValue()));
+                        criteriaBuilder.equal(root.get(input.getField()), castToRequiredType(root.join(key).get(input.getField()).getJavaType(), input.getValue()));
             case NOT_EQ:
                 return (root, query, criteriaBuilder) ->
-                        criteriaBuilder.notEqual(root.get(input.getField()),
-                                castToRequiredType(root.get(input.getField()).getJavaType(), input.getValue()));
+                        criteriaBuilder.notEqual(root.get(input.getField()), castToRequiredType(root.join(key).get(input.getField()).getJavaType(), input.getValue()));
             case GREATER_THAN:
                 return (root, query, criteriaBuilder) ->
-                        criteriaBuilder.gt(root.get(input.getField()),
-                                (Number) castToRequiredType(root.get(input.getField()).getJavaType(), input.getValue()));
+                        criteriaBuilder.gt(root.get(input.getField()), (Number) castToRequiredType(root.join(key).get(input.getField()).getJavaType(), input.getValue()));
             case LESS_THAN:
                 return (root, query, criteriaBuilder) ->
-                        criteriaBuilder.lt(root.get(input.getField()),
-                                (Number) castToRequiredType(root.get(input.getField()).getJavaType(), input.getValue()));
+                        criteriaBuilder.lt(root.get(input.getField()), (Number) castToRequiredType(root.join(key).get(input.getField()).getJavaType(), input.getValue()));
             case LIKE:
-                return (root, query, criteriaBuilder) -> {
-                    String[] split = input.getField().split("\\.");
-                    return criteriaBuilder.like(root.join(key).get(split[split.length - 1]), "%" + input.getValue() + "%");
-                };
+                return (root, query, criteriaBuilder) -> criteriaBuilder.like(root.join(key).get(split[split.length - 1]), "%" + input.getValue() + "%");
             case IN:
                 return (root, query, criteriaBuilder) ->
-                        criteriaBuilder.in(root.get(input.getField()))
-                                .value(castToRequiredType(root.get(input.getField()).getJavaType(), input.getValues()));
+                        criteriaBuilder.in(root.get(input.getField())).value(castToRequiredType(root.join(key).get(input.getField()).getJavaType(), input.getValues()));
             default:
                 throw new RuntimeException("Operation not supported yet");
         }
