@@ -1,6 +1,7 @@
 # Sreaching on database with Specification
 
 ### This project contains: 
+
 - [Mapstruct](https://mapstruct.org/)
 - [Specification](https://spring.io/blog/2011/04/26/advanced-spring-data-jpa-specifications-and-querydsl/)
 - [swagger](https://swagger.io/)
@@ -8,6 +9,7 @@
 - [PostgreSQL](https://www.postgresql.org/)
 
 ## How to use
+
 - you create your restController and extends  ``` SearchController ```</br>
 - you create your repository and extends  ``` SearchRepository ```</br>
 - you create your service and extends  ``` SearchService ```</br>
@@ -15,6 +17,7 @@
 
 
 ## Json input structure
+
 ```
 {
   "condition": "AND",
@@ -43,4 +46,7 @@
 }
 ```
 
-## your resultData is like your DTO
+## your resultData is like your DTO </br>
+
+You can use [Angular Query-builder](https://www.npmjs.com/package/angular2-query-builder)</br>
+[Demo](https://zebzhao.github.io/Angular-QueryBuilder/demo/)
