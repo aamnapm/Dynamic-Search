@@ -1,12 +1,15 @@
 package com.example.search.service;
 
+import com.example.search.dto.FieldTypeDTO;
 import com.example.search.dto.SectionDTO;
 import com.example.search.enums.ECondition;
+import com.example.search.enums.EFieldOperator;
 import com.example.search.exeption.BadRequestException;
 import com.example.search.mapper.SectionMapper;
 import com.example.search.model.Rule;
 import com.example.search.model.Section;
 import com.example.search.repository.SearchRepository;
+import com.example.search.utils.Entity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -259,5 +262,22 @@ public abstract class SearchService<T, ID extends Serializable> implements ISear
 
     private Section map(SectionDTO sectionDTO) {
         return sectionMapper.toSection(sectionDTO);
+    }
+
+    @Override
+    public List<FieldTypeDTO> getFields(Class clazz) {
+        return new Entity().findEntityFieldsName(clazz);
+    }
+
+    @Override
+    public List<FieldTypeDTO> getConfig() {
+        List<FieldTypeDTO> fieldTypeDTOS = new ArrayList<>();
+        for (EFieldOperator eFieldOperator : EFieldOperator.values()) {
+            FieldTypeDTO fieldTypeDTO = new FieldTypeDTO();
+            fieldTypeDTO.setType(eFieldOperator.getType());
+            fieldTypeDTO.setTypeList(eFieldOperator.getOperatorList());
+            fieldTypeDTOS.add(fieldTypeDTO);
+        }
+        return fieldTypeDTOS;
     }
 }
