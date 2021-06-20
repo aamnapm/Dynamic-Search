@@ -12,7 +12,8 @@ import java.util.List;
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class FieldTypeDTO {
-    private Class type;
+    private String type;
     private String name;
+    private String entity;
     private List<EOperator> typeList;
 }
