@@ -274,7 +274,8 @@ public abstract class SearchService<T, ID extends Serializable> implements ISear
         List<FieldTypeDTO> fieldTypeDTOS = new ArrayList<>();
         for (EFieldOperator eFieldOperator : EFieldOperator.values()) {
             FieldTypeDTO fieldTypeDTO = new FieldTypeDTO();
-            fieldTypeDTO.setType(eFieldOperator.getType());
+            String[] split = eFieldOperator.getType().getName().split("\\.");
+            fieldTypeDTO.setType(split[split.length - 1]);
             fieldTypeDTO.setTypeList(eFieldOperator.getOperatorList());
             fieldTypeDTOS.add(fieldTypeDTO);
         }
