@@ -2,6 +2,7 @@ package com.example.search.utils;
 
 import com.example.search.dto.FieldTypeDTO;
 import com.example.search.service.ISearchService;
+import com.google.common.base.Strings;
 import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 
 import javax.persistence.Column;
@@ -37,10 +38,12 @@ public class Entity {
 
     public List<FieldTypeDTO> findEntityFieldsName(Class clazz) {
         List<FieldTypeDTO> fieldTypeDTOS = new ArrayList<>();
-        return findEntityFieldsName(clazz, fieldTypeDTOS, null);
+        return findEntityFieldsName(clazz, fieldTypeDTOS, null, null);
     }
 
-    public List<FieldTypeDTO> findEntityFieldsName(Class clazz, List<FieldTypeDTO> fieldTypeDTOS, String entity) {
+    public List<FieldTypeDTO> findEntityFieldsName(Class clazz, List<FieldTypeDTO> fieldTypeDTOS, String entity, String prefix) {
+
+        prefix = getPrefix(prefix, entity);
 
         List<String> duplicate = findDuplicate(clazz);
 
@@ -51,11 +54,11 @@ public class Entity {
 
                 if (annotation instanceof JoinColumn) {
                     String type = findType(field);
-                    fieldTypeDTOS = findEntityFieldsName(field.getType(), fieldTypeDTOS, type);
+                    fieldTypeDTOS = findEntityFieldsName(field.getType(), fieldTypeDTOS, type, prefix);
                 }
 
                 if (annotation instanceof Column && declaredAnnotations.length == 1) {
-                    getClassFields(field, fieldTypeDTOS, entity, duplicate);
+                    getClassFields(field, fieldTypeDTOS, entity, duplicate, prefix);
                 }
             }
         }
@@ -63,7 +66,18 @@ public class Entity {
         return fieldTypeDTOS;
     }
 
-    private List<FieldTypeDTO> getClassFields(Field field, List<FieldTypeDTO> fieldTypeDTOS, String entity, List<String> duplicate) {
+    private String getPrefix(String prefix, String entity) {
+        if (!Strings.isNullOrEmpty(entity)) {
+            if (Strings.isNullOrEmpty(prefix)) {
+                prefix = entity.toLowerCase();
+            } else {
+                prefix = prefix.toLowerCase() + "." + entity.toLowerCase();
+            }
+        }
+        return prefix;
+    }
+
+    private List<FieldTypeDTO> getClassFields(Field field, List<FieldTypeDTO> fieldTypeDTOS, String entity, List<String> duplicate, String prefix) {
         Column value = field.getAnnotation(Column.class);
 
         List<String> collect = duplicate.stream().filter(s -> s.equals(value.name())).collect(Collectors.toList());
@@ -71,7 +85,7 @@ public class Entity {
         if (collect.size() > 0) {
             return fieldTypeDTOS;
         } else {
-            fieldTypeDTOS.add(createFieldTypeDTO(field, entity));
+            fieldTypeDTOS.add(createFieldTypeDTO(field, entity, prefix));
         }
 
         return fieldTypeDTOS;
@@ -94,12 +108,13 @@ public class Entity {
         return duplicateList.stream().filter(i -> Collections.frequency(duplicateList, i) > 1).collect(Collectors.toList());
     }
 
-    private FieldTypeDTO createFieldTypeDTO(Field field, String entity) {
+    private FieldTypeDTO createFieldTypeDTO(Field field, String entity, String prefix) {
         FieldTypeDTO fieldTypeDTO = new FieldTypeDTO();
         fieldTypeDTO.setName(field.getName());
         String type = findType(field);
         fieldTypeDTO.setType(type);
         fieldTypeDTO.setEntity(entity);
+        fieldTypeDTO.setPrefix(prefix);
         return fieldTypeDTO;
     }
 
