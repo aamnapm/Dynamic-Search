@@ -14,6 +14,7 @@ import java.util.List;
 public class FieldTypeDTO {
     private String type;
     private String name;
+    private String prefix;
     private String entity;
     private List<EOperator> typeList;
 }
