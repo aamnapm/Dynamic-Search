@@ -15,7 +15,6 @@ import java.lang.reflect.ParameterizedType;
 import java.util.List;
 
 @RequiredArgsConstructor
-//@RestController
 public abstract class SearchController<T, D> {
 
     protected final ISearchService<T> iNICICOSearchService;
@@ -33,12 +32,7 @@ public abstract class SearchController<T, D> {
     }
 
     @PostMapping(value = "/search")
-    public ResponseEntity<List<T>> search(@RequestBody SectionDTO sectionDTO) {
-        return new ResponseEntity<>(iNICICOSearchService.search(sectionDTO), HttpStatus.OK);
-    }
-
-    @PostMapping(value = "/test")
-    public ResponseEntity<List<D>> test(@RequestBody SectionDTO sectionDTO) {
+    public ResponseEntity<List<D>> search(@RequestBody SectionDTO sectionDTO) {
         return new ResponseEntity<>(toDTOInfo(iNICICOSearchService.test(sectionDTO, new Entity().find(iNICICOSearchService))), HttpStatus.OK);
     }
 
