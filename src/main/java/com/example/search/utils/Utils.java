@@ -15,7 +15,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class Entity {
+public class Utils {
 
     public <T> Object find(ISearchService<T> iNICICOSearchService) {
         Type[] actualTypeArguments = ((ParameterizedTypeImpl) iNICICOSearchService.getClass().getGenericSuperclass()).getActualTypeArguments();
