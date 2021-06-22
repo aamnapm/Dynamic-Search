@@ -5,9 +5,9 @@ import com.example.search.dto.SectionDTO;
 
 import java.util.List;
 
-public interface ISearchService<T> {
+public interface ISearchService<T, D> {
 
-    List<T> search(SectionDTO section, Object t);
+    List<D> search(SectionDTO section, Object t);
 
     List<FieldTypeDTO> getFields(Class clazz);
 

@@ -5,6 +5,7 @@ import com.example.search.dto.SectionDTO;
 import com.example.search.enums.ECondition;
 import com.example.search.enums.EFieldOperator;
 import com.example.search.exeption.BadRequestException;
+import com.example.search.mapper.CommonMapper;
 import com.example.search.mapper.SectionMapper;
 import com.example.search.model.Rule;
 import com.example.search.model.Section;
@@ -22,7 +23,7 @@ import java.util.List;
 
 import static org.springframework.data.jpa.domain.Specification.where;
 
-public abstract class SearchService<T, ID extends Serializable> implements ISearchService<T> {
+public abstract class SearchService<T, ID extends Serializable, D> implements ISearchService<T, D> {
 
     @Autowired
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
@@ -31,8 +32,10 @@ public abstract class SearchService<T, ID extends Serializable> implements ISear
     @Autowired
     protected SectionMapper sectionMapper;
 
+    protected CommonMapper<T, D> commonMapper;
+
     @Override
-    public List<T> search(SectionDTO section, Object t) {
+    public List<D> search(SectionDTO section, Object t) {
         String key = getKey(t);
         System.out.println(key);
 
@@ -43,7 +46,7 @@ public abstract class SearchService<T, ID extends Serializable> implements ISear
             System.out.println("result=>" + product);
         });
 
-        return queryResult;
+        return toDTOInfo(queryResult);
     }
 
     protected List<T> getData(Section section, String key) {
@@ -316,5 +319,9 @@ public abstract class SearchService<T, ID extends Serializable> implements ISear
             fieldTypeDTOS.add(fieldTypeDTO);
         }
         return fieldTypeDTOS;
+    }
+
+    protected List<D> toDTOInfo(List<T> list) {
+        return commonMapper.toDTOInfo(list);
     }
 }

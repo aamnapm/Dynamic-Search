@@ -2,7 +2,6 @@ package com.example.search.controller;
 
 import com.example.search.dto.FieldTypeDTO;
 import com.example.search.dto.SectionDTO;
-import com.example.search.mapper.CommonMapper;
 import com.example.search.service.ISearchService;
 import com.example.search.utils.Utils;
 import lombok.RequiredArgsConstructor;
@@ -17,8 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public abstract class SearchController<T, D> {
 
-    protected final ISearchService<T> iNICICOSearchService;
-    protected CommonMapper<T, D> commonMapper;
+    protected final ISearchService<T, D> iNICICOSearchService;
 
     private Class<T> tType;
     private Class<D> dType;
@@ -33,7 +31,7 @@ public abstract class SearchController<T, D> {
 
     @PostMapping(value = "/search")
     public ResponseEntity<List<D>> search(@RequestBody SectionDTO sectionDTO) {
-        return new ResponseEntity<>(toDTOInfo(iNICICOSearchService.search(sectionDTO, new Utils().find(iNICICOSearchService))), HttpStatus.OK);
+        return new ResponseEntity<>(iNICICOSearchService.search(sectionDTO, new Utils().find(iNICICOSearchService)), HttpStatus.OK);
     }
 
     @PostMapping(value = "/fields")
@@ -46,7 +44,4 @@ public abstract class SearchController<T, D> {
         return new ResponseEntity<>(iNICICOSearchService.getConfig(), HttpStatus.OK);
     }
 
-    protected List<D> toDTOInfo(List<T> list) {
-        return commonMapper.toDTOInfo(list);
-    }
 }
