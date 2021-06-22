@@ -12,6 +12,7 @@ import java.util.List;
 @Setter
 @Builder
 public class Rule {
+    private Dual dual;
     private String value;
     private String field;
     private EOperator operator;
