@@ -1,8 +1,6 @@
 package com.example.search.enums;
 
 public enum EOperator {
-    GREATER_THAN,
-    LESS_THAN,
 
     /**
      * Tests whether two expressions are equal
@@ -15,6 +13,11 @@ public enum EOperator {
     LIKE,
 
     /**
+     * Tests whether the expression do not matches a given pattern
+     */
+    NOT_LIKE,
+
+    /**
      * Tests whether two expressions are not equal
      */
     NOT_EQ,
@@ -22,22 +25,22 @@ public enum EOperator {
     /**
      * Tests whether the first numeric expression is greater than the second numeric expression
      */
-    GT,
+    GREATER_THAN,
 
     /**
      * Tests whether the first numeric expression is greater than or equal to the second numeric expression
      */
-    GE,
+    GREATER_THAN_EQUAL,
 
     /**
      * Tests whether the first numeric expression is less than the second numeric expression
      */
-    LT,
+    LESS_THAN,
 
     /**
      * Tests whether the first numeric expression is less than or equal to the second numeric expression
      */
-    LE,
+    LESS_THAN_EQUAL,
 
     /**
      * Tests whether the first expression is between the second and third expression in value
