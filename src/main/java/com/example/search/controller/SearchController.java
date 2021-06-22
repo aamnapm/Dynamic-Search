@@ -4,7 +4,7 @@ import com.example.search.dto.FieldTypeDTO;
 import com.example.search.dto.SectionDTO;
 import com.example.search.mapper.CommonMapper;
 import com.example.search.service.ISearchService;
-import com.example.search.utils.Entity;
+import com.example.search.utils.Utils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,7 +33,7 @@ public abstract class SearchController<T, D> {
 
     @PostMapping(value = "/search")
     public ResponseEntity<List<D>> search(@RequestBody SectionDTO sectionDTO) {
-        return new ResponseEntity<>(toDTOInfo(iNICICOSearchService.test(sectionDTO, new Entity().find(iNICICOSearchService))), HttpStatus.OK);
+        return new ResponseEntity<>(toDTOInfo(iNICICOSearchService.search(sectionDTO, new Utils().find(iNICICOSearchService))), HttpStatus.OK);
     }
 
     @PostMapping(value = "/fields")
