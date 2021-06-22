@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 public class Utils {
 
-    public <T> Object find(ISearchService<T> iNICICOSearchService) {
+    public <T, D> Object find(ISearchService<T, D> iNICICOSearchService) {
         Type[] actualTypeArguments = ((ParameterizedTypeImpl) iNICICOSearchService.getClass().getGenericSuperclass()).getActualTypeArguments();
 
         for (Type type : actualTypeArguments) {
