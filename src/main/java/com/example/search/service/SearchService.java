@@ -9,7 +9,7 @@ import com.example.search.mapper.SectionMapper;
 import com.example.search.model.Rule;
 import com.example.search.model.Section;
 import com.example.search.repository.SearchRepository;
-import com.example.search.utils.Entity;
+import com.example.search.utils.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -32,10 +32,12 @@ public abstract class SearchService<T, ID extends Serializable> implements ISear
     protected SectionMapper sectionMapper;
 
     @Override
-    public List<T> search(SectionDTO section) {
-        List<T> queryResult = getData(map(section), "");
+    public List<T> search(SectionDTO section, Object t) {
+        String key = getKey(t);
+        System.out.println(key);
 
-        //todo:for develop
+        List<T> queryResult = getData(map(section), key);
+
         System.out.println("result=>" + queryResult.size());
         queryResult.forEach(product -> {
             System.out.println("result=>" + product);
@@ -56,22 +58,6 @@ public abstract class SearchService<T, ID extends Serializable> implements ISear
                 return repository.findAll();
             }
         }
-    }
-
-    @Override
-    public List<T> test(SectionDTO section, Object t) {
-        String key = getKey(t);
-        System.out.println(key);
-
-        List<T> queryResult = getData(map(section), key);
-
-        System.out.println("result=>" + queryResult.size());
-        queryResult.forEach(product -> {
-            System.out.println("result=>" + product);
-        });
-
-        return queryResult;
-//        return "";
     }
 
     private String getKey(Object t) {
@@ -95,7 +81,6 @@ public abstract class SearchService<T, ID extends Serializable> implements ISear
             throw new BadRequestException("Key can not be null!");
         }
     }
-
 
     protected Specification<T> getSpecification(Section section, String key, Specification<T> specification1) {
         return getSpecification(section.getRules(), section.getCondition(), key, specification1);
@@ -158,56 +143,52 @@ public abstract class SearchService<T, ID extends Serializable> implements ISear
 
     protected Specification<T> checkOperatorAndCreateSpecification(Rule input) {
         switch (input.getOperator()) {
-            case EQUALS:
-                return (root, query, criteriaBuilder) ->
-                        criteriaBuilder.equal(root.get(input.getField()),
-                                castToRequiredType(root.get(input.getField()).getJavaType(), input.getValue()));
-            case GT:
-                return (root, query, criteriaBuilder) ->
-                        criteriaBuilder.gt(root.get(input.getDual().getFirstValue()), root.get(input.getDual().getFirstValue()));
-//                                castToRequiredType(root.get(input.getField()).getJavaType(), input.getDual().getFirstValue()),
-//                                castToRequiredType(root.get(input.getField()).getJavaType(), input.getDual().getFirstValue()));
-            case GE:
-                return (root, query, criteriaBuilder) ->
-                        criteriaBuilder.ge(root.get(input.getDual().getFirstValue()), root.get(input.getDual().getSecondValue()));
-//                                castToRequiredType(root.get(input.getField()).getJavaType(), input.getValue()));
-            case LT:
-                return (root, query, criteriaBuilder) ->
-                        criteriaBuilder.lt(root.get(input.getDual().getFirstValue()), root.get(input.getDual().getSecondValue()));
-//                                castToRequiredType(root.get(input.getField()).getJavaType(), input.getValue()));
-            case LE:
-                return (root, query, criteriaBuilder) ->
-                        criteriaBuilder.le(root.get(input.getDual().getFirstValue()), root.get(input.getDual().getSecondValue()));
-//                                castToRequiredType(root.get(input.getField()).getJavaType(), input.getValue()));
-            case BETWEEN:
-                return (root, query, criteriaBuilder) ->
-                        criteriaBuilder.gt(root.get(input.getDual().getFirstValue()), root.get(input.getDual().getSecondValue()));
-//                                castToRequiredType(root.get(input.getField()).getJavaType(), input.getValue()));
-            case NOT_EQ:
-                return (root, query, criteriaBuilder) ->
-                        criteriaBuilder.notEqual(root.get(input.getField()),
-                                castToRequiredType(root.get(input.getField()).getJavaType(), input.getValue()));
             case GREATER_THAN:
                 return (root, query, criteriaBuilder) ->
-                        criteriaBuilder.gt(root.get(input.getField()),
-                                (Number) castToRequiredType(root.get(input.getField()).getJavaType(), input.getValue()));
+                        criteriaBuilder.gt(root.get(input.getField()), (Number) castToRequiredType(root.get(input.getField()).getJavaType(), input.getValue()));
+
             case LESS_THAN:
                 return (root, query, criteriaBuilder) ->
-                        criteriaBuilder.lt(root.get(input.getField()),
-                                (Number) castToRequiredType(root.get(input.getField()).getJavaType(), input.getValue()));
+                        criteriaBuilder.lt(root.get(input.getField()), (Number) castToRequiredType(root.get(input.getField()).getJavaType(), input.getValue()));
+
+            case GREATER_THAN_EQUAL:
+                return (root, query, criteriaBuilder) ->
+                        criteriaBuilder.ge(root.get(input.getField()), (Number) castToRequiredType(root.get(input.getField()).getJavaType(), input.getValue()));
+
+            case LESS_THAN_EQUAL:
+                return (root, query, criteriaBuilder) ->
+                        criteriaBuilder.le(root.get(input.getField()), (Number) castToRequiredType(root.get(input.getField()).getJavaType(), input.getValue()));
+
+            case BETWEEN:
+                return (root, query, criteriaBuilder) ->
+                        criteriaBuilder.between(root.get(input.getField()), input.getDual().getFirstValue(), input.getDual().getSecondValue());
+
+            case EQUALS:
+                return (root, query, criteriaBuilder) ->
+                        criteriaBuilder.equal(root.get(input.getField()), castToRequiredType(root.get(input.getField()).getJavaType(), input.getValue()));
+
+            case NOT_EQ:
+                return (root, query, criteriaBuilder) ->
+                        criteriaBuilder.notEqual(root.get(input.getField()), castToRequiredType(root.get(input.getField()).getJavaType(), input.getValue()));
+
             case LIKE:
                 return (root, query, criteriaBuilder) ->
                         criteriaBuilder.like(root.get(input.getField()), "%" + input.getValue() + "%");
+
+            case NOT_LIKE:
+                return (root, query, criteriaBuilder) ->
+                        criteriaBuilder.notLike(root.get(input.getField()), input.getValue());
+
             case iS_NULL:
                 return (root, query, criteriaBuilder) ->
                         criteriaBuilder.isNull(root.get(input.getField()));
+
             case iS_NOT_NULL:
                 return (root, query, criteriaBuilder) ->
                         criteriaBuilder.isNotNull(root.get(input.getField()));
             case IN:
                 return (root, query, criteriaBuilder) ->
-                        criteriaBuilder.in(root.get(input.getField()))
-                                .value(castToRequiredType(root.get(input.getField()).getJavaType(), input.getValues()));
+                        criteriaBuilder.in(root.get(input.getField())).value(castToRequiredType(root.get(input.getField()).getJavaType(), input.getValues()));
             default:
                 throw new RuntimeException("Operation not supported yet");
         }
@@ -216,23 +197,51 @@ public abstract class SearchService<T, ID extends Serializable> implements ISear
     protected Specification<T> checkOperatorAndCreateSpecification(Rule input, String key) {
         String[] split = input.getField().split("\\.");
         switch (input.getOperator()) {
-            case EQUALS:
-                return (root, query, criteriaBuilder) ->
-                        criteriaBuilder.equal(root.get(input.getField()), castToRequiredType(root.join(key).get(input.getField()).getJavaType(), input.getValue()));
-            case NOT_EQ:
-                return (root, query, criteriaBuilder) ->
-                        criteriaBuilder.notEqual(root.get(input.getField()), castToRequiredType(root.join(key).get(input.getField()).getJavaType(), input.getValue()));
+
             case GREATER_THAN:
                 return (root, query, criteriaBuilder) ->
                         criteriaBuilder.gt(root.get(input.getField()), (Number) castToRequiredType(root.join(key).get(input.getField()).getJavaType(), input.getValue()));
+
             case LESS_THAN:
                 return (root, query, criteriaBuilder) ->
                         criteriaBuilder.lt(root.get(input.getField()), (Number) castToRequiredType(root.join(key).get(input.getField()).getJavaType(), input.getValue()));
+
+            case GREATER_THAN_EQUAL:
+                return (root, query, criteriaBuilder) ->
+                        criteriaBuilder.ge(root.get(input.getField()), (Number) castToRequiredType(root.join(key).get(input.getField()).getJavaType(), input.getValue()));
+
+            case LESS_THAN_EQUAL:
+                return (root, query, criteriaBuilder) ->
+                        criteriaBuilder.le(root.get(input.getField()), (Number) castToRequiredType(root.join(key).get(input.getField()).getJavaType(), input.getValue()));
+
+            case BETWEEN:
+                return (root, query, criteriaBuilder) ->
+                        criteriaBuilder.between(root.join(key).get(input.getField()), input.getDual().getFirstValue(), input.getDual().getSecondValue());
+
+            case EQUALS:
+                return (root, query, criteriaBuilder) ->
+                        criteriaBuilder.equal(root.get(input.getField()), castToRequiredType(root.join(key).get(input.getField()).getJavaType(), input.getValue()));
+
+            case NOT_EQ:
+                return (root, query, criteriaBuilder) ->
+                        criteriaBuilder.notEqual(root.get(input.getField()), castToRequiredType(root.join(key).get(input.getField()).getJavaType(), input.getValue()));
+
             case LIKE:
                 return (root, query, criteriaBuilder) -> criteriaBuilder.like(root.join(key).get(split[split.length - 1]), "%" + input.getValue() + "%");
+
+            case NOT_LIKE:
+                return (root, query, criteriaBuilder) -> criteriaBuilder.notLike(root.join(key).get(split[split.length - 1]), input.getValue());
+
+            case iS_NULL:
+                return (root, query, criteriaBuilder) -> criteriaBuilder.isNull(root.join(key).get(input.getField()));
+
+            case iS_NOT_NULL:
+                return (root, query, criteriaBuilder) -> criteriaBuilder.isNotNull(root.join(key).get(input.getField()));
+
             case IN:
                 return (root, query, criteriaBuilder) ->
                         criteriaBuilder.in(root.get(input.getField())).value(castToRequiredType(root.join(key).get(input.getField()).getJavaType(), input.getValues()));
+
             default:
                 throw new RuntimeException("Operation not supported yet");
         }
@@ -293,7 +302,7 @@ public abstract class SearchService<T, ID extends Serializable> implements ISear
 
     @Override
     public List<FieldTypeDTO> getFields(Class clazz) {
-        return new Entity().findEntityFieldsName(clazz);
+        return new Utils().findEntityFieldsName(clazz);
     }
 
     @Override
