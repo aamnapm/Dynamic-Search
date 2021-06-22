@@ -162,6 +162,27 @@ public abstract class SearchService<T, ID extends Serializable> implements ISear
                 return (root, query, criteriaBuilder) ->
                         criteriaBuilder.equal(root.get(input.getField()),
                                 castToRequiredType(root.get(input.getField()).getJavaType(), input.getValue()));
+            case GT:
+                return (root, query, criteriaBuilder) ->
+                        criteriaBuilder.gt(root.get(input.getDual().getFirstValue()), root.get(input.getDual().getFirstValue()));
+//                                castToRequiredType(root.get(input.getField()).getJavaType(), input.getDual().getFirstValue()),
+//                                castToRequiredType(root.get(input.getField()).getJavaType(), input.getDual().getFirstValue()));
+            case GE:
+                return (root, query, criteriaBuilder) ->
+                        criteriaBuilder.ge(root.get(input.getDual().getFirstValue()), root.get(input.getDual().getSecondValue()));
+//                                castToRequiredType(root.get(input.getField()).getJavaType(), input.getValue()));
+            case LT:
+                return (root, query, criteriaBuilder) ->
+                        criteriaBuilder.lt(root.get(input.getDual().getFirstValue()), root.get(input.getDual().getSecondValue()));
+//                                castToRequiredType(root.get(input.getField()).getJavaType(), input.getValue()));
+            case LE:
+                return (root, query, criteriaBuilder) ->
+                        criteriaBuilder.le(root.get(input.getDual().getFirstValue()), root.get(input.getDual().getSecondValue()));
+//                                castToRequiredType(root.get(input.getField()).getJavaType(), input.getValue()));
+            case BETWEEN:
+                return (root, query, criteriaBuilder) ->
+                        criteriaBuilder.gt(root.get(input.getDual().getFirstValue()), root.get(input.getDual().getSecondValue()));
+//                                castToRequiredType(root.get(input.getField()).getJavaType(), input.getValue()));
             case NOT_EQ:
                 return (root, query, criteriaBuilder) ->
                         criteriaBuilder.notEqual(root.get(input.getField()),
@@ -177,6 +198,12 @@ public abstract class SearchService<T, ID extends Serializable> implements ISear
             case LIKE:
                 return (root, query, criteriaBuilder) ->
                         criteriaBuilder.like(root.get(input.getField()), "%" + input.getValue() + "%");
+            case iS_NULL:
+                return (root, query, criteriaBuilder) ->
+                        criteriaBuilder.isNull(root.get(input.getField()));
+            case iS_NOT_NULL:
+                return (root, query, criteriaBuilder) ->
+                        criteriaBuilder.isNotNull(root.get(input.getField()));
             case IN:
                 return (root, query, criteriaBuilder) ->
                         criteriaBuilder.in(root.get(input.getField()))
